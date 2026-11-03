@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f5f5f0" />
+  <meta name="description" content="A simple guide to stores, services, floors, and parking in your mall." />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <title>Mallmate — Find your way</title>
+  <style>
+    :root {
+      --ink: #17231d;
+      --muted: #758079;
+      --paper: #f5f5f0;
+      --white: #fff;
+      --line: #e7e9e3;
+      --green: #d6f56a;
+      --green-dark: #425b22;
+      --nav: #17231d;
+      --coral: #ea795e;
+      --blue: #607dce;
+      --shadow: 0 18px 60px rgba(29, 42, 33, .07);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 14px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    button, input { font: inherit; }
+    button { color: inherit; cursor: pointer; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 238px minmax(0, 1fr); }
+    .sidebar { min-height: 100vh; padding: 28px 18px 20px; display: flex; flex-direction: column; background: var(--nav); color: #f6f7f1; }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px 29px; }
+    .brand-mark { width: 36px; height: 36px; display: grid; place-items: center; color: var(--nav); background: var(--green); border-radius: 12px; font-weight: 900; font-size: 21px; transform: rotate(-5deg); }
+    .brand-name { font-size: 17px; font-weight: 800; letter-spacing: -.7px; }
+    .brand-sub { margin-top: 1px; color: #9da89e; font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; }
+    .mall-select { margin: 0 4px 27px; padding: 13px; display: flex; align-items: center; gap: 10px; border: 1px solid #3b4840; border-radius: 14px; background: #202d25; }
+    .mall-icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; background: #344239; font-size: 17px; }
+    .mall-select strong { display: block; font-size: 12px; }
+    .mall-select small { color: #9da89e; font-size: 10px; }
+    .nav-label { padding: 0 10px 9px; color: #829087; font-size: 10px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }
+    .nav { display: grid; gap: 5px; }
+    .nav-item { width: 100%; padding: 11px 12px; display: flex; align-items: center; gap: 12px; border: 0; border-radius: 11px; color: #aeb8b0; background: transparent; text-align: left; transition: .18s; }
+    .nav-item:hover, .nav-item.active { color: #fff; background: #2b3930; }
+    .nav-item.active { box-shadow: inset 3px 0 var(--green); }
+    .nav-symbol { width: 18px; color: var(--green); text-align: center; font-size: 17px; }
+    .nav-count { margin-left: auto; color: #a3aea5; font-size: 11px; }
+    .sidebar-bottom { margin-top: auto; }
+    .wifi-mini { margin: 18px 3px 12px; padding: 13px; border: 1px solid #39463e; border-radius: 14px; background: #202d25; }
+    .wifi-mini .mini-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+    .wifi-mini strong { font-size: 12px; }
+    .online { width: 7px; height: 7px; display: inline-block; margin-right: 5px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px #d6f56a22; }
+    .wifi-mini small { color: #9da89e; font-size: 10px; }
+    .profile { display: flex; align-items: center; gap: 10px; padding: 13px 6px 0; border-top: 1px solid #354139; }
+    .avatar { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; color: var(--ink); background: #ecc3a4; font-weight: 800; font-size: 12px; }
+    .profile strong { display: block; font-size: 12px; }
+    .profile small { color: #9da89e; font-size: 10px; }
+
+    .main { min-width: 0; padding: 24px 30px 30px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 24px; }
+    .greeting h1 { margin: 0; font-size: 24px; letter-spacing: -.9px; }
+    .greeting p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .icon-button { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 13px; background: var(--white); font-size: 17px; }
+    .icon-button:hover { border-color: #bac4b9; }
+    .date-pill { padding: 10px 13px; border: 1px solid var(--line); border-radius: 13px; color: #657168; background: var(--white); font-size: 11px; }
+    .content-grid { display: grid; grid-template-columns: minmax(480px, 1fr) 310px; gap: 18px; align-items: start; }
+    .map-column { min-width: 0; }
+    .location-card { min-height: 76px; margin-bottom: 16px; padding: 14px 17px; display: flex; align-items: center; gap: 13px; border: 1px solid var(--line); border-radius: 17px; background: var(--white); box-shadow: 0 5px 24px rgba(29,42,33,.025); }
+    .location-dot { width: 36px; height: 36px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 12px; color: var(--green-dark); background: #eff8dc; font-size: 17px; }
+    .loc-copy { min-width: 0; flex: 1; }
+    .loc-copy small { display: block; margin-bottom: 2px; color: var(--muted); font-size: 10px; letter-spacing: .7px; text-transform: uppercase; }
+    .loc-copy strong { display: block; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+    .demo-tag { padding: 5px 8px; border-radius: 20px; color: #596b37; background: #f1f8df; font-size: 9px; font-weight: 800; letter-spacing: .55px; white-space: nowrap; }
+    .loc-refresh { padding: 8px 11px; border: 1px solid var(--line); border-radius: 10px; background: white; font-size: 11px; }
+    .map-card { overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--white); box-shadow: var(--shadow); }
+    .map-head { padding: 17px 18px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .map-title strong { display: block; font-size: 14px; }
+    .map-title small { color: var(--muted); font-size: 10px; }
+    .view-toggle { padding: 3px; display: flex; gap: 2px; border-radius: 10px; background: #f2f3ee; }
+    .view-toggle button { padding: 7px 10px; border: 0; border-radius: 8px; color: #778078; background: transparent; font-size: 10px; }
+    .view-toggle button.selected { color: var(--ink); background: white; box-shadow: 0 2px 7px #18231d14; font-weight: 700; }
+    .map-shell { position: relative; margin: 0 12px; overflow: hidden; border: 1px solid #e6e7df; border-radius: 15px; background: #f0f0e9; }
+    .map-canvas { width: 100%; height: 405px; display: block; }
+    .floor-chip { position: absolute; top: 13px; left: 13px; z-index: 2; padding: 8px 11px; border: 1px solid #e5e8e0; border-radius: 10px; background: #ffffffed; box-shadow: 0 3px 12px #17231d10; font-size: 11px; font-weight: 750; }
+    .floor-menu { position: absolute; top: 55px; left: 13px; z-index: 4; width: 195px; max-height: 290px; padding: 5px; overflow-y: auto; border: 1px solid #e5e8e0; border-radius: 12px; background: #fff; box-shadow: 0 10px 30px #17231d1b; }
+    .floor-menu[hidden] { display: none; }
+    .floor-option { width: 100%; padding: 9px 10px; display: block; border: 0; border-radius: 8px; background: transparent; color: #566258; text-align: left; font-size: 11px; }
+    .floor-option:hover, .floor-option.selected { color: #425b22; background: #f1f8df; font-weight: 750; }
+    .floor-chip { cursor: pointer; color: var(--ink); }
+    .install-btn { display: none; padding: 10px 12px; border: 0; border-radius: 12px; color: #243019; background: var(--green); font-size: 10px; font-weight: 800; }
+    .install-btn.show { display: inline-block; }
+    .map-controls { position: absolute; top: 13px; right: 13px; z-index: 2; display: grid; gap: 5px; }
+    .map-controls button { width: 32px; height: 32px; border: 1px solid #e5e8e0; border-radius: 10px; background: #ffffffed; font-size: 16px; }
+    .map-legend { position: absolute; right: 13px; bottom: 13px; padding: 9px 11px; display: flex; gap: 12px; border: 1px solid #e5e8e0; border-radius: 10px; background: #ffffffed; color: #69746c; font-size: 9px; }
+    .legend-key { display: flex; align-items: center; gap: 5px; }
+    .key-dot { width: 7px; height: 7px; border-radius: 50%; background: #5d7bd0; }
+    .key-line { width: 15px; border-top: 2px dashed #ea795e; }
+    .map-footer { min-height: 57px; padding: 10px 17px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .map-footer small { color: var(--muted); font-size: 10px; }
+    .map-footer strong { font-size: 11px; }
+    .map-footer .floor-count { color: #738077; font-size: 10px; }
+    .route-strip { display: none; margin: 0 12px 12px; padding: 12px 14px; align-items: center; gap: 12px; border-radius: 13px; background: #f5f7ed; }
+    .route-strip.show { display: flex; }
+    .route-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; color: #a14f3b; background: #ffe5dc; }
+    .route-text { flex: 1; }
+    .route-text strong { display: block; font-size: 11px; }
+    .route-text small { color: var(--muted); font-size: 10px; }
+    .route-strip button { padding: 8px 12px; border: 0; border-radius: 9px; color: #fff; background: var(--ink); font-size: 10px; font-weight: 700; }
+
+    .right-column { display: grid; gap: 15px; }
+    .panel { padding: 17px; border: 1px solid var(--line); border-radius: 17px; background: var(--white); box-shadow: 0 5px 24px rgba(29,42,33,.025); }
+    .panel-head { margin-bottom: 13px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .panel-head h2 { margin: 0; font-size: 14px; letter-spacing: -.25px; }
+    .panel-head button { padding: 0; border: 0; color: #647a3e; background: transparent; font-size: 10px; font-weight: 700; }
+    .search-wrap { position: relative; margin-bottom: 12px; }
+    .search-wrap span { position: absolute; top: 9px; left: 11px; color: #879188; font-size: 14px; }
+    .search-wrap input { width: 100%; height: 36px; padding: 0 11px 0 33px; border: 1px solid var(--line); border-radius: 10px; outline: none; background: #fafbf8; font-size: 11px; }
+    .search-wrap input:focus { border-color: #a5b87a; box-shadow: 0 0 0 3px #d6f56a33; }
+    .category-row { margin-bottom: 12px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+    .category-row::-webkit-scrollbar { display: none; }
+    .category { flex: 0 0 auto; padding: 6px 9px; border: 1px solid var(--line); border-radius: 20px; color: #6e7971; background: white; font-size: 9px; }
+    .category.selected { border-color: #d7e8ad; color: #4d6429; background: #f3f8e8; font-weight: 700; }
+    .store-list { display: grid; gap: 3px; }
+    .store-row { width: 100%; padding: 9px 7px; display: flex; align-items: center; gap: 10px; border: 0; border-radius: 11px; background: transparent; text-align: left; transition: .16s; }
+    .store-row:hover, .store-row.active { background: #f6f8f1; }
+    .store-logo { width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 10px; color: #465345; background: #edf0e8; font-size: 10px; font-weight: 850; }
+    .store-info { min-width: 0; flex: 1; }
+    .store-info strong { display: block; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .store-info small { color: var(--muted); font-size: 9px; }
+    .store-distance { color: #849087; font-size: 9px; white-space: nowrap; }
+    .empty { padding: 16px 8px; color: var(--muted); text-align: center; font-size: 11px; }
+    .section-rule { height: 1px; margin: 13px 0; background: var(--line); }
+    .service-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .service { padding: 9px 8px; display: flex; align-items: center; gap: 7px; border: 1px solid #eceee8; border-radius: 10px; background: #fcfcfa; color: #526057; text-align: left; font-size: 9px; }
+    .service:hover { border-color: #ced9b7; background: #f7faef; }
+    .service-icon { width: 19px; color: #7a9450; text-align: center; font-size: 14px; }
+    .parking-card { position: relative; overflow: hidden; padding: 16px; border: 0; border-radius: 17px; color: var(--ink); background: var(--green); box-shadow: var(--shadow); }
+    .parking-card::after { position: absolute; top: -30px; right: -25px; width: 130px; height: 130px; border: 1px solid #425b2226; border-radius: 50%; content: ""; box-shadow: 0 0 0 17px #425b2209, 0 0 0 35px #425b2209; }
+    .parking-card .panel-head { position: relative; z-index: 1; margin-bottom: 8px; }
+    .parking-card .panel-head h2 { font-size: 13px; }
+    .parking-card p { position: relative; z-index: 1; max-width: 205px; margin: 0 0 12px; color: #47553b; font-size: 10px; }
+    .parking-card button { position: relative; z-index: 1; padding: 9px 11px; border: 0; border-radius: 9px; color: white; background: var(--ink); font-size: 10px; font-weight: 700; }
+    .wifi-card { padding: 14px 16px; display: flex; align-items: center; gap: 11px; }
+    .wifi-card .wifi-symbol { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 11px; color: #506b2a; background: #f1f8df; font-size: 17px; }
+    .wifi-card strong { display: block; font-size: 11px; }
+    .wifi-card small { color: var(--muted); font-size: 9px; }
+    .wifi-card button { margin-left: auto; padding: 7px 9px; border: 1px solid var(--line); border-radius: 9px; background: white; font-size: 9px; }
+    .toast { position: fixed; z-index: 10; right: 25px; bottom: 25px; max-width: 330px; padding: 12px 16px; border: 1px solid #344239; border-radius: 13px; color: white; background: #202d25; box-shadow: 0 12px 35px #17231d38; font-size: 11px; opacity: 0; pointer-events: none; transform: translateY(9px); transition: .2s; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1140px) {
+      .app { grid-template-columns: 205px minmax(0, 1fr); }
+      .main { padding: 22px 20px; }
+      .content-grid { grid-template-columns: minmax(420px, 1fr) 285px; gap: 13px; }
+      .map-canvas { height: 370px; }
+    }
+    @media (max-width: 930px) {
+      .app { grid-template-columns: 70px minmax(0, 1fr); }
+      .sidebar { padding: 21px 10px; align-items: center; }
+      .brand { padding: 0 0 27px; }
+      .brand-copy, .mall-select > div:not(.mall-icon), .nav-label, .nav-text, .nav-count, .wifi-mini, .profile > div:not(.avatar) { display: none; }
+      .mall-select { width: 48px; margin: 0 0 24px; padding: 7px; justify-content: center; }
+      .nav { width: 100%; }
+      .nav-item { justify-content: center; padding: 12px 0; }
+      .nav-symbol { font-size: 18px; }
+      .sidebar-bottom { width: 100%; }
+      .profile { justify-content: center; padding: 13px 0 0; }
+      .content-grid { grid-template-columns: minmax(0, 1fr) 280px; }
+    }
+    @media (max-width: 730px) {
+      .app { display: block; padding-bottom: 66px; }
+      .sidebar { position: fixed; z-index: 5; right: 0; bottom: 0; left: 0; min-height: 0; height: 62px; padding: 6px 10px; flex-direction: row; justify-content: center; border-top: 1px solid #354139; }
+      .brand, .mall-select, .nav-label, .sidebar-bottom { display: none; }
+      .nav { max-width: 520px; grid-template-columns: repeat(4, 1fr); }
+      .nav-item { min-height: 48px; padding: 4px; gap: 2px; flex-direction: column; justify-content: center; }
+      .nav-text { display: block; font-size: 8px; }
+      .nav-symbol { height: 19px; font-size: 16px; }
+      .main { padding: 19px 14px 20px; }
+      .topbar { margin-bottom: 18px; }
+      .greeting h1 { font-size: 20px; }
+      .greeting p { font-size: 10px; }
+      .date-pill { display: none; }
+      .content-grid { grid-template-columns: minmax(0, 1fr); }
+      .right-column { grid-row: 2; grid-template-columns: 1fr; }
+      .location-card { padding: 11px; gap: 9px; }
+      .demo-tag { display: none; }
+      .loc-refresh { padding: 8px; font-size: 10px; }
+      .map-head { padding: 14px 12px 10px; }
+      .view-toggle button { padding: 7px 8px; }
+      .map-shell { margin: 0 8px; }
+      .map-canvas { height: 310px; }
+      .map-footer { padding: 9px 12px; }
+      .map-footer .floor-count { display: none; }
+      .panel { padding: 15px; }
+    }
+    @media (max-width: 390px) {
+      .main { padding-right: 10px; padding-left: 10px; }
+      .greeting h1 { font-size: 18px; }
+      .icon-button { width: 35px; height: 35px; }
+      .map-canvas { height: 280px; }
+      .map-legend { gap: 7px; font-size: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">m</div>
+        <div class="brand-copy"><div class="brand-name">mallmate</div><div class="brand-sub">your mall, made easy</div></div>
+      </div>
+      <div class="mall-select">
+        <div class="mall-icon">⌂</div>
+        <div><strong>Sarath City Capital</strong><small>Hyderabad · change mall</small></div>
+      </div>
+      <div class="nav-label">Your visit</div>
+      <nav class="nav" aria-label="Main navigation">
+        <button class="nav-item active" data-nav="Explore"><span class="nav-symbol">⌖</span><span class="nav-text">Explore map</span></button>
+        <button class="nav-item" data-nav="Directory"><span class="nav-symbol">⌕</span><span class="nav-text">Store directory</span><span class="nav-count">68</span></button>
+        <button class="nav-item" data-nav="Parking"><span class="nav-symbol">P</span><span class="nav-text">Find my car</span></button>
+        <button class="nav-item" data-nav="Saved"><span class="nav-symbol">♡</span><span class="nav-text">Saved places</span><span class="nav-count">2</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="wifi-mini"><div class="mini-top"><strong>Mall Wi-Fi</strong><span style="font-size:15px">⌁</span></div><small>Connection guide</small></div>
+        <div class="profile"><div class="avatar">CB</div><div><strong>Guest visitor</strong><small>Plan your visit</small></div></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="greeting"><h1>Find your way around.</h1><p>Everything in the mall, one clear map.</p></div>
+        <div class="top-actions"><div class="date-pill">TUESDAY, NOVEMBER 3</div><button class="install-btn" id="installBtn">Install app</button><button class="icon-button" aria-label="Notifications" id="noticeBtn">♧</button><button class="icon-button" aria-label="Help" id="helpBtn">?</button></div>
+      </header>
+      <div class="content-grid">
+        <section class="map-column" aria-label="Mall map">
+          <div class="location-card">
+            <div class="location-dot">⌖</div>
+            <div class="loc-copy"><small>Your current location · demo</small><strong id="locationLabel">Upper Ground · near Lifestyle, East Atrium</strong></div>
+            <span class="demo-tag">SIMULATED</span>
+            <button class="loc-refresh" id="locateBtn">Update</button>
+          </div>
+          <div class="map-card">
+            <div class="map-head">
+              <div class="map-title"><strong id="mapHeading">Explore the mall</strong><small id="mapSubheading">Choose a floor or search for a place</small></div>
+              <div class="view-toggle"><button class="selected" id="shopsView">Shops</button><button id="servicesView">Services</button></div>
+            </div>
+            <div class="map-shell">
+              <button class="floor-chip" id="floorChip" aria-expanded="false" aria-controls="floorMenu">Upper Ground ⌄</button>
+              <div class="floor-menu" id="floorMenu" hidden></div>
+              <div class="map-controls"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomOut" aria-label="Zoom out">−</button><button id="recenter" aria-label="Recenter map">⌖</button></div>
+              <svg class="map-canvas" id="mallMap" viewBox="0 0 760 520" role="img" aria-label="Interactive mall floor map"></svg>
+              <div class="map-legend"><span class="legend-key"><i class="key-dot"></i>You are here</span><span class="legend-key"><i class="key-line"></i>Your route</span></div>
+            </div>
+            <div class="route-strip" id="routeStrip"><div class="route-icon">➜</div><div class="route-text"><strong id="routeTitle">Route to destination</strong><small id="routeDetails">Follow the highlighted path</small></div><button id="startRoute">Start route</button></div>
+            <div class="map-footer"><div><strong id="mapFloorName">Upper Ground Floor</strong><br><small id="mapFooterNote">Map preview · position is simulated</small></div><span class="floor-count" id="floorCount">2 of 9 floors</span></div>
+          </div>
+        </section>
+
+        <aside class="right-column">
+          <section class="panel">
+            <div class="panel-head"><h2>Find a place</h2><button id="browseAll">Browse all →</button></div>
+            <label class="search-wrap"><span>⌕</span><input id="searchInput" type="search" placeholder="Store, restaurant, brand…" autocomplete="off" /></label>
+            <div class="category-row" id="categoryRow">
+              <button class="category selected" data-category="All">All</button><button class="category" data-category="Shopping">Shopping</button><button class="category" data-category="Food">Food</button><button class="category" data-category="Fun">Fun</button>
+            </div>
+            <div class="store-list" id="storeList"></div>
+            <div class="section-rule"></div>
+            <div class="panel-head"><h2>Useful nearby</h2><button id="serviceAll">See all →</button></div>
+            <div class="service-grid">
+              <button class="service" data-destination="Lift"><span class="service-icon">↕</span>Lift</button>
+              <button class="service" data-destination="Escalator"><span class="service-icon">⇧</span>Escalator</button>
+              <button class="service" data-destination="Restroom"><span class="service-icon">♧</span>Restroom</button>
+              <button class="service" data-destination="Help desk"><span class="service-icon">i</span>Help desk</button>
+              <button class="service" data-destination="Exit"><span class="service-icon">↗</span>Exit</button>
+              <button class="service" data-destination="Food court"><span class="service-icon">⌂</span>Food court</button>
+            </div>
+          </section>
+          <section class="parking-card">
+            <div class="panel-head"><h2>Parked today?</h2><span>🚘</span></div>
+            <p>Sample saved bay C-341. Open the parking map to see the route back.</p>
+            <button id="parkingBtn">Open parking map →</button>
+          </section>
+          <section class="panel wifi-card">
+            <div class="wifi-symbol">⌁</div><div><strong>Mall Wi-Fi guide</strong><small>Access details from the mall</small></div><button id="wifiBtn">How to connect</button>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const floors = ["Lower Ground", "Upper Ground", "First Floor", "Second Floor", "Third Floor", "Fourth Floor", "Fifth Floor", "Basement / Parking"];
+    const stores = [
+      { name: "Lifestyle", kind: "Shopping", category: "Fashion", floor: "Upper Ground", code: "L", x: 145, y: 112, distance: "48 m", color: "#dcebc1" },
+      { name: "H&M", kind: "Shopping", category: "Fashion", floor: "Upper Ground", code: "H", x: 570, y: 120, distance: "86 m", color: "#f2dfd5" },
+      { name: "Nike", kind: "Shopping", category: "Sports", floor: "Upper Ground", code: "N", x: 142, y: 390, distance: "120 m", color: "#dce7f5" },
+      { name: "Marks & Spencer", kind: "Shopping", category: "Fashion", floor: "First Floor", code: "M&S", x: 574, y: 117, distance: "1 floor up", color: "#e8ddec" },
+      { name: "Starbucks", kind: "Food", category: "Cafe", floor: "First Floor", code: "S", x: 145, y: 390, distance: "1 floor up", color: "#d7eadb" },
+      { name: "Croma", kind: "Shopping", category: "Electronics", floor: "Second Floor", code: "C", x: 575, y: 115, distance: "2 floors up", color: "#dce7f5" },
+      { name: "Mozo Sizzlers", kind: "Food", category: "Restaurant", floor: "Second Floor", code: "M", x: 146, y: 390, distance: "2 floors up", color: "#f4e4c8" },
+      { name: "Sarath Cinemas", kind: "Fun", category: "Cinema", floor: "Fourth Floor", code: "SC", x: 560, y: 115, distance: "4 floors up", color: "#f2dfd5" },
+      { name: "Apple Restaurants Food Court", kind: "Food", category: "Food court", floor: "Fourth Floor", code: "A", x: 147, y: 390, distance: "4 floors up", color: "#d7eadb" },
+      { name: "Air Live", kind: "Fun", category: "Entertainment", floor: "Fifth Floor", code: "AL", x: 560, y: 118, distance: "5 floors up", color: "#e8ddec" },
+      { name: "SPAR", kind: "Shopping", category: "Market", floor: "Lower Ground", code: "S", x: 145, y: 115, distance: "1 floor down", color: "#dcebc1" },
+    ];
+    const services = [
+      { name: "Lift", x: 380, y: 72, icon: "↕" }, { name: "Escalator", x: 380, y: 449, icon: "⇧" },
+      { name: "Restroom", x: 672, y: 282, icon: "♧" }, { name: "Help desk", x: 91, y: 281, icon: "i" },
+      { name: "Exit", x: 688, y: 460, icon: "↗" }, { name: "Food court", x: 145, y: 390, icon: "⌂" },
+    ];
+    const parkingBays = ["A-108", "A-109", "A-120", "A-127", "A-134", "B-147", "B-167", "B-181", "C-301", "C-341"];
+    let savedCarBay = "C-341";
+    let currentFloor = "Upper Ground";
+    let selectedStore = null;
+    let activeCategory = "All";
+    let activeView = "Shops";
+    let routeStarted = false;
+    let selectedService = null;
+    let originFloor = "Upper Ground";
+    let scale = 1;
+    let toastTimer;
+    const map = document.getElementById("mallMap");
+    const storeList = document.getElementById("storeList");
+    const searchInput = document.getElementById("searchInput");
+    const routeStrip = document.getElementById("routeStrip");
+    const locationLabel = document.getElementById("locationLabel");
+    document.querySelector(".date-pill").textContent = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" }).format(new Date()).toUpperCase();
+
+    function escapeText(value) { return String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+    function showToast(message) {
+      const toast = document.getElementById("toast"); toast.textContent = message; toast.classList.add("show");
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+    function currentFloorNumber() { return floors.indexOf(currentFloor) + 1; }
+
+    function renderMap() {
+      const isParking = currentFloor === "Basement / Parking";
+      document.getElementById("floorChip").textContent = currentFloor + " ⌄";
+      renderFloorMenu();
+      document.getElementById("mapFloorName").textContent = isParking ? "Basement / Parking" : currentFloor + (currentFloor.includes("Floor") ? "" : " Floor");
+      document.getElementById("floorCount").textContent = currentFloorNumber() + " of " + floors.length + " floors";
+      document.getElementById("mapHeading").textContent = isParking ? "Find your parking bay" : "Explore the mall";
+      document.getElementById("mapSubheading").textContent = isParking ? "Parking level · bay labels are a sample layout" : "Choose a floor or search for a place";
+      document.getElementById("mapFooterNote").textContent = isParking ? "Demo parking layout · save your bay on arrival" : "Map preview · position is simulated";
+      const floorStores = stores.filter(s => s.floor === currentFloor);
+      if (isParking) {
+        let svg = `<rect x="22" y="22" width="716" height="476" rx="23" fill="#eae8db" stroke="#d4d2c7" stroke-width="2"/>`;
+        svg += `<path d="M70 84 H690 M70 151 H690 M70 218 H690 M70 285 H690 M70 352 H690 M70 419 H690" stroke="#fff" stroke-width="22" stroke-linecap="round"/>`;
+        svg += `<path d="M142 54 V465 M284 54 V465 M426 54 V465 M568 54 V465" stroke="#fff" stroke-width="20" stroke-linecap="round"/>`;
+        svg += `<rect x="320" y="34" width="120" height="54" rx="12" fill="#26342a"/><text x="380" y="67" fill="#fff" text-anchor="middle" font-size="12" font-weight="700">MALL LOBBY</text>`;
+        const bayCoords = [[88,115],[212,115],[350,115],[492,115],[650,115],[88,250],[212,250],[350,250],[492,250],[650,250]];
+        parkingBays.forEach((bay, i) => {
+          const coords = bayCoords[i];
+          const selected = bay === savedCarBay;
+          svg += `<g class="parking-bay" data-bay="${bay}" style="cursor:pointer"><rect x="${coords[0]-24}" y="${coords[1]-14}" width="48" height="28" rx="6" fill="${selected ? "#d6f56a" : "#f8f7ef"}" stroke="${selected ? "#758b44" : "#b9b8ac"}"/><text x="${coords[0]}" y="${coords[1]+3}" text-anchor="middle" fill="#526056" font-size="8" font-weight="700">${bay}</text>${selected ? `<text x="${coords[0]}" y="${coords[1]-23}" text-anchor="middle" fill="#425b22" font-size="9" font-weight="800">YOUR CAR</text>` : ""}</g>`;
+        });
+        const carCoords = bayCoords[parkingBays.indexOf(savedCarBay)] || [350,115];
+        svg += `<path d="M650 278 V250 H${Math.max(220, carCoords[0]+76)} L${carCoords[0]} ${carCoords[1]}" fill="none" stroke="#ea795e" stroke-width="4" stroke-dasharray="7 8" stroke-linecap="round"/>`;
+        svg += `<circle cx="650" cy="278" r="10" fill="#607dce" stroke="#fff" stroke-width="4"/><text x="650" y="307" text-anchor="middle" fill="#445da5" font-size="10" font-weight="800">YOU ARE HERE</text>`;
+        map.innerHTML = `<g id="mapGroup">${svg}</g>`;
+        map.querySelectorAll(".parking-bay").forEach(el => el.addEventListener("click", () => { savedCarBay = el.dataset.bay; renderMap(); showToast(`Car location saved: bay ${savedCarBay}.`); }));
+        return;
+      }
+      let svg = `<rect x="24" y="20" width="712" height="480" rx="25" fill="#e8e9e1" stroke="#d3d7cc" stroke-width="2"/>`;
+      // Walkable loop around the central atrium.
+      svg += `<path d="M180 84 H580 Q650 84 650 154 V366 Q650 436 580 436 H180 Q110 436 110 366 V154 Q110 84 180 84Z" fill="none" stroke="#b6bcb1" stroke-width="68" stroke-linejoin="round"/>`;
+      svg += `<path d="M180 84 H580 Q650 84 650 154 V366 Q650 436 580 436 H180 Q110 436 110 366 V154 Q110 84 180 84Z" fill="none" stroke="#f5f5ef" stroke-width="3" stroke-dasharray="2 10" stroke-linecap="round"/>`;
+      svg += `<rect x="260" y="150" width="240" height="220" rx="18" fill="#dce4d0" stroke="#c8d4bc" stroke-width="2"/><text x="380" y="250" text-anchor="middle" fill="#76866a" font-size="12" font-weight="800" letter-spacing="2">CENTRAL ATRIUM</text><text x="380" y="272" text-anchor="middle" fill="#8e9a85" font-size="9">open space</text>`;
+      // Shop fronts around the concourse.
+      [[40,111,61,60],[40,196,61,60],[40,281,61,60],[40,366,61,60],[659,111,61,60],[659,196,61,60],[659,281,61,60],[659,366,61,60],[234,35,60,35],[310,35,60,35],[386,35,60,35],[462,35,60,35],[234,450,60,35],[310,450,60,35],[386,450,60,35],[462,450,60,35]].forEach((r,i)=>{
+        svg += `<rect x="${r[0]}" y="${r[1]}" width="${r[2]}" height="${r[3]}" rx="7" fill="${i%3===0 ? "#fbfcf8" : "#f5f7f1"}" stroke="#cfd4c9"/>`;
+      });
+      svg += `<rect x="352" y="40" width="56" height="26" rx="7" fill="#82976c"/><text x="380" y="57" fill="#fff" text-anchor="middle" font-size="9" font-weight="800">LIFTS</text>`;
+      svg += `<rect x="352" y="454" width="56" height="26" rx="7" fill="#82976c"/><text x="380" y="471" fill="#fff" text-anchor="middle" font-size="9" font-weight="800">ESCALATORS</text>`;
+      svg += `<text x="380" y="105" text-anchor="middle" fill="#798478" font-size="9" font-weight="700" letter-spacing="1">NORTH CONCOURSE</text>`;
+      svg += `<text x="380" y="420" text-anchor="middle" fill="#798478" font-size="9" font-weight="700" letter-spacing="1">SOUTH CONCOURSE</text>`;
+      const crossingFloors = selectedStore && selectedStore.floor !== originFloor;
+      const currentPoint = crossingFloors ? {x: 380, y: 72} : {x: 118, y: 167};
+      if (selectedStore && selectedStore.floor === currentFloor) {
+        svg += `<path d="M${currentPoint.x} ${currentPoint.y} L${crossingFloors ? 380 : 145} ${crossingFloors ? 130 : 167} L${crossingFloors ? 470 : 198} ${crossingFloors ? 130 : 167} L${crossingFloors ? 470 : 400} 400 L${selectedStore.x} ${selectedStore.y}" fill="none" stroke="#ea795e" stroke-width="5" stroke-dasharray="8 8" stroke-linecap="round" stroke-linejoin="round"/>`;
+      } else if (selectedService) {
+        svg += `<path d="M${currentPoint.x} ${currentPoint.y} L198 ${currentPoint.y} L198 400 L${selectedService.x} ${selectedService.y}" fill="none" stroke="#ea795e" stroke-width="5" stroke-dasharray="8 8" stroke-linecap="round" stroke-linejoin="round"/>`;
+      }
+      if (activeView === "Services") {
+        services.forEach(service => {
+          svg += `<g class="map-service" data-service="${escapeText(service.name)}" style="cursor:pointer"><circle cx="${service.x}" cy="${service.y}" r="16" fill="#fff" stroke="#8da26c" stroke-width="2"/><text x="${service.x}" y="${service.y+4}" text-anchor="middle" fill="#516a32" font-size="13" font-weight="800">${service.icon}</text><text x="${service.x}" y="${service.y+29}" text-anchor="middle" fill="#647160" font-size="9" font-weight="700">${escapeText(service.name.toUpperCase())}</text></g>`;
+        });
+      } else {
+        floorStores.forEach((store, i) => {
+          const chosen = selectedStore && selectedStore.name === store.name;
+          svg += `<g class="map-pin" data-name="${escapeText(store.name)}" style="cursor:pointer"><circle cx="${store.x}" cy="${store.y}" r="${chosen ? 24 : 20}" fill="${chosen ? "#ea795e" : store.color}" stroke="#fff" stroke-width="4"/><text x="${store.x}" y="${store.y+4}" text-anchor="middle" fill="#27332a" font-size="${store.code.length>1?8:11}" font-weight="850">${escapeText(store.code)}</text><text x="${store.x}" y="${store.y+34}" text-anchor="middle" fill="#38463b" font-size="10" font-weight="800">${escapeText(store.name.length > 20 ? store.name.slice(0,18)+"…" : store.name)}</text></g>`;
+        });
+      }
+      if (currentFloor === originFloor || crossingFloors) {
+        svg += `<g><circle cx="${currentPoint.x}" cy="${currentPoint.y}" r="18" fill="#607dce" opacity=".16"/><circle cx="${currentPoint.x}" cy="${currentPoint.y}" r="9" fill="#607dce" stroke="#fff" stroke-width="4"/><text x="${currentPoint.x+18}" y="${currentPoint.y-10}" fill="#445da5" font-size="9" font-weight="800">${crossingFloors ? "LIFT" : "YOU"}</text></g>`;
+      }
+      map.innerHTML = `<g id="mapGroup" transform="translate(380 260) scale(${scale}) translate(-380 -260)">${svg}</g>`;
+      map.querySelectorAll(".map-pin").forEach(el => el.addEventListener("click", () => selectStore(stores.find(s => s.name === el.dataset.name))));
+      map.querySelectorAll(".map-service").forEach(el => el.addEventListener("click", () => selectDestination(el.dataset.service)));
+    }
+
+    function listMatches() {
+      const query = searchInput.value.trim().toLowerCase();
+      return stores.filter(s => (activeCategory === "All" || s.kind === activeCategory) && (!query || `${s.name} ${s.category} ${s.floor}`.toLowerCase().includes(query)));
+    }
+    function renderList() {
+      const matches = listMatches();
+      storeList.innerHTML = matches.slice(0, 6).map(s => `<button class="store-row ${selectedStore && selectedStore.name===s.name ? "active" : ""}" data-name="${escapeText(s.name)}"><span class="store-logo" style="background:${s.color}">${escapeText(s.code)}</span><span class="store-info"><strong>${escapeText(s.name)}</strong><small>${escapeText(s.category)} · ${escapeText(s.floor)}</small></span><span class="store-distance">${escapeText(s.distance)}</span></button>`).join("") || `<div class="empty">No places match that search. Try another name.</div>`;
+      storeList.querySelectorAll(".store-row").forEach(row => row.addEventListener("click", () => selectStore(stores.find(s => s.name === row.dataset.name))));
+    }
+    function selectStore(store) {
+      if (!store) return;
+      selectedStore = store; selectedService = null; currentFloor = store.floor; routeStarted = false;
+      activeView = "Shops"; document.getElementById("shopsView").classList.add("selected"); document.getElementById("servicesView").classList.remove("selected");
+      document.getElementById("routeTitle").textContent = `Route to ${store.name}`;
+      document.getElementById("routeDetails").textContent = store.floor === originFloor ? `About ${store.distance} · follow the highlighted concourse route` : `Take a lift from ${originFloor} to ${store.floor}, then follow the highlighted route`;
+      document.getElementById("startRoute").textContent = "Start route";
+      routeStrip.classList.add("show");
+      document.getElementById("mapFooterNote").textContent = "Route preview · position is simulated";
+      renderMap(); renderList();
+    }
+    function selectDestination(name) {
+      if (name === "Food court") {
+        const store = stores.find(s => s.name === "Apple Restaurants Food Court");
+        if (store) return selectStore(store);
+      }
+      selectedStore = null; selectedService = services.find(s => s.name.toLowerCase() === name.toLowerCase()) || null; activeView = "Services"; currentFloor = currentFloor === "Basement / Parking" ? "Upper Ground" : currentFloor;
+      document.getElementById("servicesView").classList.add("selected"); document.getElementById("shopsView").classList.remove("selected");
+      document.getElementById("routeTitle").textContent = `Nearest ${name.toLowerCase()}`;
+      document.getElementById("routeDetails").textContent = `Showing ${name.toLowerCase()} locations on this floor`;
+      document.getElementById("startRoute").textContent = "Start route";
+      routeStrip.classList.add("show"); renderMap();
+    }
+    function renderFloorMenu() {
+      const menu = document.getElementById("floorMenu");
+      menu.innerHTML = floors.map((floor, i) => `<button class="floor-option ${floor === currentFloor ? "selected" : ""}" data-floor="${escapeText(floor)}">${i + 1}. ${escapeText(floor)}</button>`).join("");
+      menu.querySelectorAll(".floor-option").forEach(button => button.addEventListener("click", () => {
+        currentFloor = button.dataset.floor; selectedStore = null; selectedService = null; routeStrip.classList.remove("show");
+        menu.hidden = true; document.getElementById("floorChip").setAttribute("aria-expanded", "false"); renderMap(); renderList();
+      }));
+    }
+
+    document.getElementById("categoryRow").addEventListener("click", e => {
+      const button = e.target.closest(".category"); if (!button) return;
+      activeCategory = button.dataset.category;
+      document.querySelectorAll(".category").forEach(b => b.classList.toggle("selected", b === button)); renderList();
+    });
+    searchInput.addEventListener("input", renderList);
+    renderFloorMenu();
+    document.getElementById("floorChip").addEventListener("click", () => { const menu = document.getElementById("floorMenu"); menu.hidden = !menu.hidden; document.getElementById("floorChip").setAttribute("aria-expanded", String(!menu.hidden)); });
+    document.addEventListener("click", e => { if (!e.target.closest("#floorChip") && !e.target.closest("#floorMenu")) { document.getElementById("floorMenu").hidden = true; document.getElementById("floorChip").setAttribute("aria-expanded", "false"); } });
+    document.getElementById("shopsView").addEventListener("click", () => { activeView = "Shops"; document.getElementById("shopsView").classList.add("selected"); document.getElementById("servicesView").classList.remove("selected"); renderMap(); });
+    document.getElementById("servicesView").addEventListener("click", () => { activeView = "Services"; document.getElementById("servicesView").classList.add("selected"); document.getElementById("shopsView").classList.remove("selected"); renderMap(); });
+    document.querySelectorAll(".service").forEach(btn => btn.addEventListener("click", () => selectDestination(btn.dataset.destination)));
+    document.getElementById("locateBtn").addEventListener("click", () => { currentFloor = "Upper Ground"; originFloor = "Upper Ground"; selectedStore = null; selectedService = null; activeView = "Shops"; locationLabel.textContent = "Upper Ground · near Lifestyle, East Atrium"; routeStrip.classList.remove("show"); renderMap(); renderList(); showToast("Demo location updated: Upper Ground, near Lifestyle."); });
+    document.getElementById("startRoute").addEventListener("click", e => { routeStarted = !routeStarted; e.currentTarget.textContent = routeStarted ? "End route" : "Start route"; showToast(routeStarted ? "Demo navigation started. Follow the highlighted route." : "Demo navigation ended."); });
+    document.getElementById("zoomIn").addEventListener("click", () => { scale = Math.min(1.45, scale + .12); renderMap(); });
+    document.getElementById("zoomOut").addEventListener("click", () => { scale = Math.max(.82, scale - .12); renderMap(); });
+    document.getElementById("recenter").addEventListener("click", () => { scale = 1; renderMap(); showToast("Map centered on your demo location."); });
+    document.getElementById("parkingBtn").addEventListener("click", () => { currentFloor = "Basement / Parking"; selectedStore = null; selectedService = null; routeStrip.classList.remove("show"); renderMap(); showToast(`Parking map opened. Sample saved bay: ${savedCarBay}.`); });
+    document.querySelector('[data-nav="Parking"]').addEventListener("click", () => { currentFloor = "Basement / Parking"; selectedStore = null; selectedService = null; routeStrip.classList.remove("show"); renderMap(); });
+    document.querySelector('[data-nav="Directory"]').addEventListener("click", () => { document.getElementById("searchInput").focus(); showToast("Search the sample directory by store, category, or floor."); });
+    document.querySelector('[data-nav="Saved"]').addEventListener("click", () => { showToast("Saved places: Lifestyle and Apple Restaurants Food Court."); });
+    document.querySelectorAll(".nav-item").forEach(item => item.addEventListener("click", () => { document.querySelectorAll(".nav-item").forEach(i => i.classList.toggle("active", i === item)); }));
+    document.getElementById("wifiBtn").addEventListener("click", () => showToast("Connect to the mall’s guest network in your device Wi-Fi settings. Access details are provided by the mall."));
+    document.getElementById("helpBtn").addEventListener("click", () => showToast("This prototype uses a demo location. A live version needs mall positioning support."));
+    document.getElementById("noticeBtn").addEventListener("click", () => showToast("You’re all caught up."));
+    document.getElementById("browseAll").addEventListener("click", () => { activeCategory = "All"; document.querySelectorAll(".category").forEach(b => b.classList.toggle("selected", b.dataset.category === "All")); searchInput.value = ""; renderList(); showToast("Showing the sample store directory."); });
+    document.getElementById("serviceAll").addEventListener("click", () => { activeView = "Services"; document.getElementById("servicesView").click(); showToast("Tap a service marker to preview its location."); });
+    let installPrompt;
+    window.addEventListener("beforeinstallprompt", event => { event.preventDefault(); installPrompt = event; document.getElementById("installBtn").classList.add("show"); });
+    document.getElementById("installBtn").addEventListener("click", async () => {
+      if (!installPrompt) return;
+      installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; document.getElementById("installBtn").classList.remove("show");
+    });
+    if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("./sw.js").catch(() => {});
+    renderMap(); renderList();
+  </script>
+</body>
+</html>
